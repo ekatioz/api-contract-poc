@@ -1,0 +1,190 @@
+openapi: 3.0.3
+
+info:
+  title: Proof of Concept
+  version: 1.0.1
+
+servers:
+  - url: http://localhost:8080
+
+components:
+  responses:
+    NotAuthorized:
+      description: The user is not authorized to access the resource.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    UnexpectedError:
+      description: An unexpected error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    UserNotFound:
+      description: The user was not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    UserId:
+      type: string
+      format: uuid
+
+    CreateUser:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        age:
+          type: integer
+          format: int32
+      required:
+        - userId
+        - name
+        - email
+
+    User:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/CreateUser"
+        - type: object
+          properties:
+            userId:
+              $ref: "#/components/schemas/UserId"
+          required:
+            - userId
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - message
+        - traceId
+        - timestamp
+
+paths:
+  /v1/users:
+    get:
+      summary: Returns a list of users.
+      operationId: listUsers
+      responses:
+        "200":
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/NotAuthorized"
+        default:
+          $ref: "#/components/responses/UnexpectedError"
+    post:
+      summary: Creates a new user.
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUser"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/NotAuthorized"
+        default:
+          $ref: "#/components/responses/UnexpectedError"
+  /v1/users/{userId}:
+    get:
+      summary: Returns a user by ID.
+      operationId: getUserById
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/UserId"
+      responses:
+        "200":
+          description: A user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "401":
+          $ref: "#/components/responses/NotAuthorized"
+        default:
+          $ref: "#/components/responses/UnexpectedError"
+    put:
+      summary: Updates a user by ID.
+      operationId: updateUserById
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/UserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUser"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "401":
+          $ref: "#/components/responses/NotAuthorized"
+        default:
+          $ref: "#/components/responses/UnexpectedError"
+    delete:
+      summary: Deletes a user by ID.
+      operationId: deleteUserById
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/UserId"
+      responses:
+        "204":
+          description: User deleted
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "401":
+          $ref: "#/components/responses/NotAuthorized"
+        default:
+          $ref: "#/components/responses/UnexpectedError"

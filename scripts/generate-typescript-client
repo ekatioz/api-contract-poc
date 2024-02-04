@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# This script is used to generate the typescript client for the API
+
+cd $(pwd)/generators/typescript
+
+npm install
+npm run generateApi
+npm run syncApiVersion
+npm run build
+npm publish
